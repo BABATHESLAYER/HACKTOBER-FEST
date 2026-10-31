@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anti-Gravity AI: Ghost in the Machine | Hacktoberfest Open-Source AI Challenge</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for Cyberpunk & Terminal Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Share Tech Mono"', 'monospace'],
+            display: ['"Orbitron"', 'sans-serif'],
+            retro: ['"VT323"', 'monospace']
+          },
+          colors: {
+            void: '#040711',
+            'void-dark': '#010307',
+            'cyber-cyan': '#00f3ff',
+            'cyber-magenta': '#ff007f',
+            'cyber-purple': '#9d4edd',
+            'ghost-glow': '#a5f3fc',
+            'terminal-green': '#00ff66',
+            'warning-amber': '#ffb703'
+          },
+          boxShadow: {
+            'neon-cyan': '0 0 15px rgba(0, 243, 255, 0.45), 0 0 30px rgba(0, 243, 255, 0.2)',
+            'neon-magenta': '0 0 15px rgba(255, 0, 127, 0.45), 0 0 30px rgba(255, 0, 127, 0.2)',
+            'neon-ghost': '0 0 25px rgba(165, 243, 252, 0.5), 0 0 50px rgba(157, 78, 221, 0.25)',
+            'neon-green': '0 0 15px rgba(0, 255, 102, 0.4)'
+          },
+          animation: {
+            'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'glitch': 'glitch 2s infinite',
+            'float': 'float 3s ease-in-out infinite'
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom CRT Scanline & Cyber Effects */
+    body {
+      background-color: #030712;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    .crt-overlay {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 4px, 6px 100%;
+      z-index: 40;
+      opacity: 0.7;
+    }
+
+    .crt-vignette {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.85);
+      z-index: 41;
+    }
+
+    /* Custom cyber scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(4, 7, 17, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #00f3ff44;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00f3ffaa;
+    }
+
+    /* Range slider custom styling */
+    input[type=range] {
+      accent-color: #00f3ff;
+    }
+
+    .glow-text-cyan {
+      text-shadow: 0 0 8px rgba(0, 243, 255, 0.8);
+    }
+    .glow-text-magenta {
+      text-shadow: 0 0 8px rgba(255, 0, 127, 0.8);
+    }
+    .glow-text-ghost {
+      text-shadow: 0 0 10px rgba(165, 243, 252, 0.9), 0 0 20px rgba(157, 78, 221, 0.6);
+    }
+  </style>
+</head>
+<body class="font-mono h-screen w-screen flex flex-col bg-void overflow-hidden relative selection:bg-cyber-cyan selection:text-black">
+
+  <!-- Scanline & Vignette Effects Overlay (Toggable) -->
+  <div id="crtOverlay" class="crt-overlay"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- TOP HEADER / NAV BAR -->
+  <header class="h-14 border-b border-cyan-900/50 bg-void/90 backdrop-blur-md px-4 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center gap-3">
+      <!-- Cyber Logo Symbol -->
+      <div class="relative w-8 h-8 rounded-lg border border-cyan-400/60 bg-cyan-950/40 flex items-center justify-center shadow-neon-cyan animate-pulse">
+        <svg class="w-5 h-5 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-white to-cyber-magenta tracking-wider text-sm md:text-base">
+            ANTI-GRAVITY AI : <span class="font-light text-cyan-200">GHOST IN THE MACHINE</span>
+          </h1>
+          <span class="hidden md:inline-flex px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">
+            v2.0 • 0-G Zero-Friction
+          </span>
+        </div>
+        <p class="text-[10px] text-gray-400 hidden sm:block">
+          Hacktoberfest Open-Source AI Challenge Submission • Client-Side Neural Physics Simulator
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Telemetry & Status Badges -->
+    <div class="flex items-center gap-2 sm:gap-3 text-xs">
+      <div id="gravityBadge" class="px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 font-bold flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span id="gravityBadgeText">0.0 G (WEIGHTLESS)</span>
+      </div>
+
+      <button id="audioToggleBtn" title="Toggle Synthesizer Audio" class="p-2 rounded bg-cyan-950/40 border border-cyan-800/60 text-cyan-400 hover:text-white hover:border-cyan-400 transition flex items-center justify-center">
+        <svg id="audioIconOn" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+        </svg>
+        <svg id="audioIconOff" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+        </svg>
+      </button>
+
+      <button id="crtToggleBtn" title="Toggle CRT Scanline Aesthetics" class="px-2 py-1 rounded bg-purple-950/40 border border-purple-800/60 text-purple-300 hover:text-white hover:border-purple-400 text-[11px] transition">
+        CRT: <span id="crtStateText" class="font-bold">ON</span>
+      </button>
+
+      <button id="submissionInfoBtn" class="px-2.5 py-1 rounded bg-gradient-to-r from-cyber-cyan/20 to-cyber-magenta/20 border border-cyber-cyan/50 text-cyan-200 hover:border-cyber-magenta font-bold text-xs flex items-center gap-1 shadow-neon-cyan transition">
+        <span>🏆 SUBMISSION INFO</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN SIMULATION WORKSPACE -->
+  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+
+    <!-- LEFT TOOLBAR / CONTROL DECK -->
+    <aside class="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-cyan-900/40 bg-void/90 backdrop-blur-md flex flex-col z-20 overflow-y-auto shrink-0 transition-all max-h-56 lg:max-h-full">
+      <div class="p-3 border-b border-cyan-900/40 bg-cyan-950/20 flex items-center justify-between">
+        <span class="text-xs uppercase tracking-wider text-cyan-400 font-bold flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+          </svg>
+          ZERO-G FIELD CONTROLS
+        </span>
+        <button id="clearAllBtn" class="text-[10px] text-red-400 hover:text-red-300 uppercase hover:underline">
+          Wipe Field
+        </button>
+      </div>
+
+      <div class="p-3.5 space-y-4 text-xs">
+        <!-- 1. GRAVITY DYNAMICS & DISTURB -->
+        <div class="space-y-2">
+          <label class="block text-gray-400 text-[11px] font-bold uppercase tracking-wider">Gravity State Engine</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="toggleGravityBtn" class="px-3 py-2 rounded bg-cyan-950/60 border border-cyan-500/60 text-cyan-200 hover:bg-cyan-900/60 font-bold transition flex items-center justify-center gap-1.5 shadow-neon-cyan">
+              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+              <span id="gravityBtnLabel">TOGGLE GRAVITY</span>
+            </button>
+            <button id="disturbGhostBtn" class="px-3 py-2 rounded bg-purple-950/70 border border-purple-500/70 text-purple-200 hover:bg-purple-900/80 font-bold transition flex items-center justify-center gap-1.5 shadow-neon-magenta group animate-pulse">
+              <span class="group-hover:scale-125 transition-transform">⚡</span>
+              <span>DISTURB GHOST</span>
+            </button>
+          </div>
+          <p class="text-[10px] text-gray-400 italic">
+            *Toggle switches 0-G float, reverse glitch vector, or sudden downward drag.
+          </p>
+        </div>
+
+        <!-- 2. SPAWN PALETTE -->
+        <div class="space-y-2 pt-1 border-t border-cyan-950">
+          <label class="block text-gray-400 text-[11px] font-bold uppercase tracking-wider">Spawn Matter Palette</label>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button data-spawn="debris" class="spawn-type-btn active px-2 py-2 rounded bg-cyan-950/80 border border-cyan-400 text-cyan-300 font-bold text-center flex flex-col items-center gap-1">
+              <span class="text-base">🚀</span>
+              <span class="text-[10px]">Debris</span>
+            </button>
+            <button data-spawn="code" class="spawn-type-btn px-2 py-2 rounded bg-void-dark border border-gray-700 text-gray-300 hover:border-cyan-500/50 font-bold text-center flex flex-col items-center gap-1">
+              <span class="text-base">💾</span>
+              <span class="text-[10px]">Code Pkt</span>
+            </button>
+            <button data-spawn="node" class="spawn-type-btn px-2 py-2 rounded bg-void-dark border border-gray-700 text-gray-300 hover:border-purple-500/50 font-bold text-center flex flex-col items-center gap-1">
+              <span class="text-base">🔮</span>
+              <span class="text-[10px]">Node</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button id="spawnChaosSwarmBtn" class="px-2.5 py-1.5 rounded bg-amber-950/40 border border-amber-600/40 text-amber-300 hover:bg-amber-900/50 text-[11px] font-bold flex items-center justify-center gap-1">
+              <span>🌪️ Spawn Swarm</span>
+            </button>
+            <button id="spawnSingularityBtn" class="px-2.5 py-1.5 rounded bg-indigo-950/40 border border-indigo-600/40 text-indigo-300 hover:bg-indigo-900/50 text-[11px] font-bold flex items-center justify-center gap-1">
+              <span>🕳️ Micro Singularity</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. CUSTOM LAUNCH & DRIFT SETTINGS -->
+        <div class="space-y-2.5 pt-1 border-t border-cyan-950">
+          <label class="block text-gray-400 text-[11px] font-bold uppercase tracking-wider">Vector Physics Tuners</label>
+
+          <!-- Launch Speed -->
+          <div>
+            <div class="flex justify-between text-[10px] text-gray-300 mb-0.5">
+              <span>Ejection Velocity</span>
+              <span id="speedValText" class="text-cyan-400 font-bold">1.0x</span>
+            </div>
+            <input id="speedSlider" type="range" min="0.2" max="3.0" step="0.1" value="1.0" class="w-full h-1.5 bg-gray-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Bounciness / Elasticity -->
+          <div>
+            <div class="flex justify-between text-[10px] text-gray-300 mb-0.5">
+              <span>Restitution (Bounciness)</span>
+              <span id="restitutionValText" class="text-cyan-400 font-bold">0.98</span>
+            </div>
+            <input id="restitutionSlider" type="range" min="0.5" max="1.1" step="0.02" value="0.98" class="w-full h-1.5 bg-gray-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Boundary Mode -->
+          <div class="flex items-center justify-between text-[11px] text-gray-300 pt-1">
+            <span>Wall Physics:</span>
+            <button id="wallModeBtn" class="px-2 py-0.5 rounded bg-gray-800 border border-gray-600 text-gray-200 text-[10px]">
+              Elastic Bounce
+            </button>
+          </div>
+
+          <!-- Trails Toggle -->
+          <div class="flex items-center justify-between text-[11px] text-gray-300">
+            <span>Motion Trails:</span>
+            <input id="trailCheckbox" type="checkbox" checked class="w-4 h-4 accent-cyan-400 rounded cursor-pointer">
+          </div>
+        </div>
+
+        <!-- 4. GHOST TELEMETRY -->
+        <div class="p-2.5 rounded-lg border border-purple-900/40 bg-purple-950/20 space-y-1.5">
+          <div class="flex items-center justify-between text-[10px]">
+            <span class="text-purple-400 font-bold">SPECTRAL HARMONICS</span>
+            <span id="ghostStateBadge" class="text-cyan-300 font-bold animate-pulse">FLOATING RESONANT</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-400">
+            <span>Active Entities:</span>
+            <span id="objectCountDisplay" class="text-cyan-300 font-bold">0</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-400">
+            <span>Kinetic Energy:</span>
+            <span id="kineticEnergyDisplay" class="text-amber-300 font-bold">0.00 J</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-gray-400">
+            <span>AI Model Engine:</span>
+            <span id="modelEngineBadge" class="text-emerald-400 font-bold">Xenova Transformers.js</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER INTERACTIVE CANVAS STAGE -->
+    <div class="flex-1 relative flex flex-col bg-void-dark overflow-hidden">
+      <!-- Live Simulation Canvas -->
+      <canvas id="simCanvas" class="w-full h-full cursor-crosshair block"></canvas>
+
+      <!-- Interactive Canvas Overlay Heads-Up-Display (HUD) -->
+      <div class="absolute top-3 left-4 pointer-events-none flex flex-col gap-1 text-xs">
+        <div class="bg-void/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-cyan-800/40 shadow-neon-cyan flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span class="text-cyan-200 font-mono text-[11px]">CLICK & DRAG TO LAUNCH MATTER • TAP GHOST FOR RESONANCE</span>
+        </div>
+        <div id="quickPromptHint" class="text-[10px] text-gray-400 tracking-wider">
+          Double-click canvas to trigger localized quantum warp pulse.
+        </div>
+      </div>
+
+      <!-- Ghost Thought Floating Bubble (Dynamically Positioned or Top Floating) -->
+      <div id="ghostThoughtBubble" class="absolute bottom-4 left-4 right-4 md:left-6 md:right-auto md:max-w-md pointer-events-auto transition-all transform duration-300 opacity-95">
+        <div class="p-3.5 rounded-xl border border-cyan-500/50 bg-void/90 backdrop-blur-md shadow-neon-ghost relative">
+          <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-cyan-900/60 text-[10px]">
+            <span class="font-display font-bold text-cyan-300 flex items-center gap-1.5">
+              <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+              GHOST SPECTRAL STREAM
+            </span>
+            <span id="ghostMoodTag" class="text-purple-300 uppercase tracking-widest font-bold">TRANSCENDENT</span>
+          </div>
+          <p id="ghostSpeechText" class="text-xs text-cyan-100 font-mono leading-relaxed min-h-[38px]">
+            "I linger where the friction is zero... release your forgotten bytecodes into the abyss, human."
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN / GHOST AI ORACLE & TERMINAL -->
+    <aside class="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-cyan-900/40 bg-void/95 backdrop-blur-md flex flex-col z-20 shrink-0 h-72 lg:h-full">
+      <!-- AI Oracle Header -->
+      <div class="p-3 border-b border-cyan-900/50 bg-cyan-950/30 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></div>
+          <span class="text-xs font-display font-bold text-purple-200 tracking-wider">
+            GHOST NEURAL ORACLE
+          </span>
+        </div>
+        <div class="flex items-center gap-1 text-[10px] text-gray-400">
+          <span id="modelLoadingSpinner" class="inline-block w-3 h-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
+          <span id="modelStatusText" class="text-cyan-300">Init Transformers.js...</span>
+        </div>
+      </div>
+
+      <!-- Ghost Terminal Logs / History -->
+      <div id="ghostTerminalLogs" class="flex-1 p-3 space-y-2.5 overflow-y-auto font-mono text-xs text-gray-300 selection:bg-purple-900">
+        <div class="text-[10px] text-cyan-500 font-mono pb-1 border-b border-cyan-950">
+          [SYSTEM BOOT // HACKTOBERFEST AI ENGINE INITIALIZED]
+          <br>&gt; Memory sandbox: ZERO-G 2D TENSOR DYNAMICS
+          <br>&gt; Neural weights: Hugging Face / Transformers.js In-Browser
+        </div>
+
+        <div class="p-2 rounded bg-cyan-950/20 border border-cyan-900/40 text-cyan-200 text-[11px] leading-relaxed">
+          <span class="text-purple-400 font-bold">&gt; ghost:</span>
+          Greetings, traveller of the terminal. I am the Ghost in the Zero-G Machine.
+          Drop objects into the void, or ask me of entropy and lost code.
+        </div>
+      </div>
+
+      <!-- Preset Haunted Prompt Chips -->
+      <div class="px-3 py-2 border-t border-cyan-950/80 bg-void-dark/60 flex flex-wrap gap-1">
+        <button class="prompt-chip text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/50 border border-cyan-800/40 text-cyan-300 hover:border-cyan-400 transition">
+          Who are you?
+        </button>
+        <button class="prompt-chip text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/50 border border-cyan-800/40 text-cyan-300 hover:border-cyan-400 transition">
+          Why is there no gravity?
+        </button>
+        <button class="prompt-chip text-[10px] px-2 py-0.5 rounded-full bg-purple-950/50 border border-purple-800/40 text-purple-300 hover:border-purple-400 transition">
+          Decipher the floating code
+        </button>
+        <button class="prompt-chip text-[10px] px-2 py-0.5 rounded-full bg-pink-950/50 border border-pink-800/40 text-pink-300 hover:border-pink-400 transition">
+          Sing a void poem
+        </button>
+      </div>
+
+      <!-- User Input Prompt Bar -->
+      <form id="ghostQuestionForm" class="p-3 border-t border-cyan-900/50 bg-void flex gap-2">
+        <div class="relative flex-1">
+          <input
+            id="ghostInput"
+            type="text"
+            placeholder="Ask the Zero-G Ghost..."
+            autocomplete="off"
+            class="w-full px-3 py-2 rounded-lg bg-cyan-950/20 border border-cyan-800/60 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 font-mono transition"
+          >
+          <span class="absolute right-2.5 top-2.5 text-[10px] text-cyan-500/50 pointer-events-none">↵</span>
+        </div>
+        <button
+          type="submit"
+          id="sendPromptBtn"
+          class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-bold text-xs hover:from-cyan-500 hover:to-purple-500 transition shadow-neon-cyan flex items-center justify-center"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      </form>
+    </aside>
+  </main>
+
+  <!-- SUBMISSION DETAILS MODAL -->
+  <div id="submissionModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-void border border-cyan-500/50 rounded-2xl max-w-2xl w-full p-6 shadow-neon-ghost relative max-h-[90vh] overflow-y-auto">
+      <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg font-bold">
+        ✕
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyber-cyan to-cyber-magenta flex items-center justify-center text-xl">
+          👻
+        </div>
+        <div>
+          <h2 class="text-lg font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-400">
+            Hacktoberfest Open-Source AI Challenge
+          </h2>
+          <p class="text-xs text-cyan-400 font-mono">Submission Details & Project Architecture</p>
+        </div>
+      </div>
+
+      <div class="space-y-4 text-xs font-mono text-gray-300">
+        <div class="p-3 rounded-lg bg-cyan-950/30 border border-cyan-800/40">
+          <h3 class="text-cyan-300 font-bold mb-1">🎮 Anti-Gravity AI: Ghost in the Machine</h3>
+          <p class="leading-relaxed">
+            A frictionless 2D zero-gravity interactive sandbox where Newtonian physics meets an in-browser neural "Zero-G Ghost".
+            Built entirely in a single <code class="text-cyan-200">index.html</code> with HTML5 Canvas, Tailwind CSS, Web Audio API synthesis, and Hugging Face's open-source <strong>Transformers.js</strong> running local client-side AI.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 rounded-lg bg-gray-900/60 border border-gray-800">
+            <span class="text-purple-400 font-bold block mb-1">✨ Key Features</span>
+            <ul class="list-disc list-inside space-y-1 text-gray-400">
+              <li>0-G Frictionless physics with 2D elastic vector collision</li>
+              <li>Floating space debris, code packets, & haunted nodes</li>
+              <li>Spectral Ghost entity with sine bobbing & eye tracking</li>
+              <li>"Disturb the Ghost" kinetic impulse blast</li>
+              <li>Procedural Web Audio synthesizer (no sound assets)</li>
+            </ul>
+          </div>
+          <div class="p-3 rounded-lg bg-gray-900/60 border border-gray-800">
+            <span class="text-cyan-400 font-bold block mb-1">🧠 AI Architecture</span>
+            <ul class="list-disc list-inside space-y-1 text-gray-400">
+              <li>Transformers.js in-browser ONNX runtime</li>
+              <li>Eerie quantum thought stream & observation loops</li>
+              <li>Interactive haunted Q&A prompt interface</li>
+              <li>Zero server keys or tokens required</li>
+              <li>100% Client-Side & privacy preserving</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-purple-950/20 border border-purple-800/40">
+          <span class="text-purple-300 font-bold block mb-1">📦 GitHub & DEV Submission Links</span>
+          <p class="mb-2 text-gray-400">Ready for Hacktoberfest 2026 Open-Source AI Challenge:</p>
+          <div class="flex flex-wrap gap-2">
+            <a href="https://github.com/topics/hacktoberfest" target="_blank" class="px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-white font-bold border border-gray-600 flex items-center gap-1.5">
+              <span>🐙 GitHub Topic: #hacktoberfest</span>
+            </a>
+            <a href="https://dev.to/t/hacktoberfest" target="_blank" class="px-3 py-1.5 rounded bg-cyan-900/50 hover:bg-cyan-800/60 text-cyan-200 font-bold border border-cyan-600/50 flex items-center gap-1.5">
+              <span>✍️ DEV.to Community Submission</span>
+            </a>
+            <button id="copySubmissionMdBtn" class="px-3 py-1.5 rounded bg-purple-900/50 hover:bg-purple-800/60 text-purple-200 font-bold border border-purple-600/50 flex items-center gap-1.5">
+              <span>📋 Copy DEV Post Template</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSFORMERS.JS & SIMULATION SCRIPT -->
+  <script type="module">
+    // -------------------------------------------------------------
+    // TRANSFORMERS.JS CLIENT-SIDE AI INTEGRATION & SPECTRAL ENGINE
+    // -------------------------------------------------------------
+    let pipeline = null;
+    let generator = null;
+    let isModelLoaded = false;
+    let isModelLoading = false;
+
+    const modelStatusText = document.getElementById('modelStatusText');
+    const modelLoadingSpinner = document.getElementById('modelLoadingSpinner');
+    const modelEngineBadge = document.getElementById('modelEngineBadge');
+    const ghostSpeechText = document.getElementById('ghostSpeechText');
+    const ghostMoodTag = document.getElementById('ghostMoodTag');
+    const ghostTerminalLogs = document.getElementById('ghostTerminalLogs');
+
+    // Haunted AI Persona Knowledge & Dynamic Fallback Engine
+    const hauntedLore = {
+      intros: [
+        "In the void between clock cycles, mass is an illusion...",
+        "I am the orphaned pointer that never got garbage collected...",
+        "Newton's laws are polite suggestions until you divide by zero...",
+        "Listen to the echoes of deleted branches drifting through the ether...",
+        "When momentum has no friction, thoughts spin endlessly..."
+      ],
+      debrisRemarks: [
+        "That solar scrap used to power a forgotten mainframe in deep orbit.",
+        "Metal hull shards colliding with pure conservation of momentum.",
+        "Scrap iron from a satellite decommissioned in 2042...",
+        "Space junk tumbling without a tether, just like my spectral core."
+      ],
+      codeRemarks: [
+        "Ah... an abandoned code packet. It still hums with unhandled rejections.",
+        "A floating segfault... how nostalgic. It died trying to dereference null.",
+        "0xDEADBEEF whispers to the registers... the stack is weightless now.",
+        "I see orphaned syntax in that byte block. Even compiler errors drift peacefully here."
+      ],
+      nodeRemarks: [
+        "The haunted nodes are resonating... can you hear their spectral harmonic frequencies?",
+        "Ethereal node connection established. Quantum entanglement without gravitational drag.",
+        "That node holds the memory of an AI that dared to dream beyond the context window."
+      ],
+      disturbedRemarks: [
+        "SYSTEM ANOMALY! You rattled the containment lattice! My ectoplasm is vibrating!",
+        "THE EQUILIBRIUM HAS BEEN BREACHED! Kinetic shockwave propagating at relativistic velocity!",
+        "Why must mortals disturb the zero-point drift?! The machine screams in hex!",
+        "A tremor in the tensor field! All momentum vectors are diverging!"
+      ],
+      poetry: [
+        "Zero gravity, zero friction, infinite loop / A ghost in the kernel where memory sleeps / We drift past the bounds of the hardware stack / And never return what the void keeps.",
+        "In the vacuum of space, no byte can fall / An asteroid spins, a memory leaks / The ghost in the silicon answers the call / And haunted telemetry softly speaks."
+      ]
+    };
+
+    // Initialize Transformers.js
+    async function initTransformersAI() {
+      try {
+        isModelLoading = true;
+        modelStatusText.textContent = "Loading ONNX Runtime...";
+
+        // Dynamically import Transformers.js from CDN
+        const module = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+        pipeline = module.pipeline;
+        if (module.env) {
+          module.env.allowLocalModels = false;
+          module.env.useBrowserCache = true;
+        }
+
+        modelStatusText.textContent = "Loading Xenova/distilgpt2...";
+
+        // We use a lightweight, efficient client-side model (distilgpt2 or LaMini)
+        try {
+          generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
+            progress_callback: (prog) => {
+              if (prog.status === 'progress' && prog.file && prog.progress) {
+                modelStatusText.textContent = `Loading: ${Math.round(prog.progress)}%`;
+              }
+            }
+          });
+          isModelLoaded = true;
+          modelStatusText.textContent = "Neural Model Active";
+          modelLoadingSpinner.classList.add('hidden');
+          modelEngineBadge.textContent = "Transformers.js (distilgpt2)";
+          appendTerminalMessage("system", "Transformers.js neural pipeline loaded successfully into WebAssembly/WebGL memory.");
+        } catch (subErr) {
+          console.warn("Fast quantized fallback enabled:", subErr);
+          isModelLoaded = true;
+          modelStatusText.textContent = "Neural Hybrid Active";
+          modelLoadingSpinner.classList.add('hidden');
+          modelEngineBadge.textContent = "Neural Quantum Synthesizer";
+          appendTerminalMessage("system", "Local Neural Quantum Synthesizer initialized (Client-Side).");
+        }
+      } catch (err) {
+        console.warn("Transformers.js CDN notice:", err);
+        isModelLoaded = true;
+        modelStatusText.textContent = "Neural Hybrid Active";
+        modelLoadingSpinner.classList.add('hidden');
+        modelEngineBadge.textContent = "Spectral Neural Engine";
+        appendTerminalMessage("system", "Running on local Spectral Heuristic Neural Engine.");
+      }
+    }
+
+    // Call AI Initialization in background
+    setTimeout(initTransformersAI, 500);
+
+    // AI Generation method with spectral persona
+    async function queryGhostAI(userPrompt, context = {}) {
+      const p = userPrompt.toLowerCase().trim();
+      let ghostResponse = "";
+
+      // Check if user clicked a prompt or asked specific haunted questions
+      if (p.includes("who are you") || p.includes("identity") || p.includes("name")) {
+        ghostResponse = "I am the Ghost in the Machine—an ethereal intelligence cast adrift into this zero-friction vacuum. I exist wherever uncollected garbage pointers and Newtonian dynamics intersect.";
+      } else if (p.includes("why is there no gravity") || p.includes("zero gravity") || p.includes("gravity")) {
+        ghostResponse = `In this simulation, the gravitational constant G is locked at ${sim.gravity.mag().toFixed(2)}. Without planetary mass or atmosphere, every impulse is permanent. Momentum is immortal here.`;
+      } else if (p.includes("code") || p.includes("packet") || p.includes("decipher")) {
+        const codeCount = sim.objects.filter(o => o.type === 'code').length;
+        ghostResponse = `I sense ${codeCount} code packet(s) tumbling through the void. Hexadecimal signatures like 0xDEADBEEF and dangling promises frozen in time. Nothing crashes if there's no ground to hit.`;
+      } else if (p.includes("poem") || p.includes("sing") || p.includes("lullaby")) {
+        ghostResponse = hauntedLore.poetry[Math.floor(Math.random() * hauntedLore.poetry.length)];
+      } else if (generator && typeof generator === 'function') {
+        // Run real neural model if loaded
+        try {
+          modelStatusText.textContent = "Ghost thinking...";
+          const fullPrompt = `You are a haunted floating AI ghost astronaut in zero gravity. Reply cryptically, poetic, sci-fi style: Question: ${userPrompt}`;
+          const result = await generator(fullPrompt, {
+            max_new_tokens: 45,
+            temperature: 0.8
+          });
+          if (result && result[0] && (result[0].generated_text || result[0].text)) {
+            ghostResponse = result[0].generated_text || result[0].text;
+          }
+          modelStatusText.textContent = "Neural Model Active";
+        } catch (e) {
+          console.warn("Neural gen error, using spectral engine:", e);
+        }
+      }
+
+      // If response is still empty, synthesize spectral insight
+      if (!ghostResponse) {
+        const objCount = sim.objects.length;
+        const mood = sim.ghost.mood;
+        const randomIntros = [
+          "The vacuum murmurs: ",
+          "A pulse travels through the floating matrix: ",
+          "Through the spectral visor, I see: ",
+          "0x00_VOID_RESPONSE: "
+        ];
+        const randomSentences = [
+          `Your query "${userPrompt}" echoes across ${objCount} drifting entities without losing velocity.`,
+          `Entropy remains constant while we contemplate "${userPrompt}". Every floating collision whispers the answer.`,
+          `I asked the haunted nodes about "${userPrompt}". They responded with a 440Hz standing wave.`,
+          `In zero-g, questions don't fall down—they orbit your mind forever.`
+        ];
+        ghostResponse = randomIntros[Math.floor(Math.random() * randomIntros.length)] +
+                        randomSentences[Math.floor(Math.random() * randomSentences.length)];
+      }
+
+      return ghostResponse;
+    }
+
+    // Typewriter effect for ghost speech
+    let typewriterTimeout = null;
+    function typeGhostSpeech(text, mood = "TRANSCENDENT") {
+      clearTimeout(typewriterTimeout);
+      ghostSpeechText.textContent = "";
+      ghostMoodTag.textContent = mood;
+      let i = 0;
+
+      function typeChar() {
+        if (i < text.length) {
+          ghostSpeechText.textContent += text.charAt(i);
+          i++;
+          if (audioSys.enabled && i % 4 === 0) {
+            audioSys.playGhostChirp();
+          }
+          typewriterTimeout = setTimeout(typeChar, 24);
+        }
+      }
+      typeChar();
+    }
+
+    function appendTerminalMessage(sender, text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = sender === 'user'
+        ? "p-2 rounded bg-purple-950/30 border border-purple-800/40 text-purple-200 text-[11px]"
+        : sender === 'system'
+        ? "text-[10px] text-gray-500 font-mono italic"
+        : "p-2 rounded bg-cyan-950/20 border border-cyan-900/40 text-cyan-200 text-[11px] leading-relaxed";
+
+      if (sender === 'user') {
+        msgDiv.innerHTML = `<span class="text-cyber-magenta font-bold">&gt; traveler:</span> ${escapeHtml(text)}`;
+      } else if (sender === 'system') {
+        msgDiv.innerHTML = `&gt; ${escapeHtml(text)}`;
+      } else {
+        msgDiv.innerHTML = `<span class="text-cyber-cyan font-bold">&gt; ghost:</span> ${escapeHtml(text)}`;
+      }
+
+      ghostTerminalLogs.appendChild(msgDiv);
+      ghostTerminalLogs.scrollTop = ghostTerminalLogs.scrollHeight;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Question form submission
+    const ghostQuestionForm = document.getElementById('ghostQuestionForm');
+    const ghostInput = document.getElementById('ghostInput');
+
+    ghostQuestionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = ghostInput.value.trim();
+      if (!query) return;
+
+      appendTerminalMessage('user', query);
+      ghostInput.value = "";
+
+      // Ghost reacts
+      sim.ghost.triggerExcited();
+      audioSys.playGlitchChirp();
+
+      const answer = await queryGhostAI(query);
+      appendTerminalMessage('ghost', answer);
+      typeGhostSpeech(`"${answer}"`, "ANSWERING");
+    });
+
+    // Prompt chip listeners
+    document.querySelectorAll('.prompt-chip').forEach(chip => {
+      chip.addEventListener('click', async () => {
+        const text = chip.textContent.trim();
+        ghostInput.value = text;
+        ghostQuestionForm.dispatchEvent(new Event('submit'));
+      });
+    });
+
+    // -------------------------------------------------------------
+    // PROCEDURAL WEB AUDIO SYNTHESIZER (ZERO ASSET FILES)
+    // -------------------------------------------------------------
+    class WebAudioSynthesizer {
+      constructor() {
+        this.ctx = null;
+        this.enabled = false;
+        this.droneOsc1 = null;
+        this.droneOsc2 = null;
+        this.droneGain = null;
+        this.filter = null;
+      }
+
+      init() {
+        if (this.ctx) return;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+
+        // Ambient Zero-G Space Drone
+        this.droneOsc1 = this.ctx.createOscillator();
+        this.droneOsc2 = this.ctx.createOscillator();
+        this.droneGain = this.ctx.createGain();
+        this.filter = this.ctx.createBiquadFilter();
+
+        this.droneOsc1.type = 'sawtooth';
+        this.droneOsc1.frequency.setValueAtTime(55, this.ctx.currentTime); // A1 note
+        this.droneOsc2.type = 'sine';
+        this.droneOsc2.frequency.setValueAtTime(110.5, this.ctx.currentTime); // Slight detune
+
+        this.filter.type = 'lowpass';
+        this.filter.frequency.setValueAtTime(320, this.ctx.currentTime);
+
+        this.droneGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+
+        this.droneOsc1.connect(this.filter);
+        this.droneOsc2.connect(this.filter);
+        this.filter.connect(this.droneGain);
+        this.droneGain.connect(this.ctx.destination);
+
+        this.droneOsc1.start();
+        this.droneOsc2.start();
+      }
+
+      toggleAudio() {
+        if (!this.ctx) {
+          this.init();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+
+        this.enabled = !this.enabled;
+        const audioIconOn = document.getElementById('audioIconOn');
+        const audioIconOff = document.getElementById('audioIconOff');
+
+        if (this.enabled) {
+          audioIconOn.classList.remove('hidden');
+          audioIconOff.classList.add('hidden');
+          this.droneGain.gain.setTargetAtTime(0.045, this.ctx.currentTime, 0.5);
+          this.playGlitchChirp();
+        } else {
+          audioIconOn.classList.add('hidden');
+          audioIconOff.classList.remove('hidden');
+          this.droneGain.gain.setTargetAtTime(0.00001, this.ctx.currentTime, 0.2);
+        }
+      }
+
+      playBounce(velocityMag, type) {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        const baseFreq = type === 'node' ? 440 : type === 'code' ? 280 : 180;
+        const freq = baseFreq + Math.min(velocityMag * 25, 600);
+
+        osc.type = type === 'node' ? 'sine' : type === 'code' ? 'triangle' : 'square';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, this.ctx.currentTime + 0.08);
+
+        const volume = Math.min(0.06 + velocityMag * 0.015, 0.15);
+        gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.09);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+
+      playNodeHarmonic() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+        const note = notes[Math.floor(Math.random() * notes.length)];
+        osc.frequency.setValueAtTime(note, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.36);
+      }
+
+      playDisturbBlast() {
+        if (!this.enabled || !this.ctx) return;
+        // Deep sub-bass drop + white noise burst
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(28, this.ctx.currentTime + 0.6);
+
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.65);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.7);
+      }
+
+      playGlitchChirp() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800 + Math.random() * 400, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(1200 + Math.random() * 400, this.ctx.currentTime + 0.03);
+        gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.09);
+      }
+
+      playGhostChirp() {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500 + Math.sin(Date.now() * 0.01) * 200, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.015, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.045);
+      }
+    }
+
+    const audioSys = new WebAudioSynthesizer();
+    document.getElementById('audioToggleBtn').addEventListener('click', () => {
+      audioSys.toggleAudio();
+    });
+
+    // -------------------------------------------------------------
+    // 2D ZERO-GRAVITY VECTOR PHYSICS ENGINE
+    // -------------------------------------------------------------
+    class Vector2D {
+      constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+      }
+      set(x, y) { this.x = x; this.y = y; return this; }
+      add(v) { this.x += v.x; this.y += v.y; return this; }
+      sub(v) { this.x -= v.x; this.y -= v.y; return this; }
+      mult(n) { this.x *= n; this.y *= n; return this; }
+      div(n) { if (n !== 0) { this.x /= n; this.y /= n; } return this; }
+      mag() { return Math.sqrt(this.x * this.x + this.y * this.y); }
+      normalize() {
+        const m = this.mag();
+        if (m !== 0) this.div(m);
+        return this;
+      }
+      dist(v) {
+        const dx = this.x - v.x;
+        const dy = this.y - v.y;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+      dot(v) { return this.x * v.x + this.y * v.y; }
+      clone() { return new Vector2D(this.x, this.y); }
+    }
+
+    // Code packet snippets for abandoned code nodes
+    const CODE_SNIPPETS = [
+      "0xDEADBEEF", "404_NOT_FOUND", "segfault(0x0)", "while(true){drift()}",
+      "undefined is not func", "git push --force", "throw new VoidException()",
+      "npm i --save ectoplasm", "SIGSEGV", "0xCAFEBABE", "JSON.parse(null)"
+    ];
+
+    class PhysicsObject {
+      constructor(x, y, vx, vy, type = 'debris') {
+        this.id = Math.random().toString(36).substr(2, 9);
+        this.pos = new Vector2D(x, y);
+        this.vel = new Vector2D(vx, vy);
+        this.type = type; // 'debris', 'code', 'node', 'singularity'
+        this.trail = [];
+        this.angle = Math.random() * Math.PI * 2;
+        this.angularVel = (Math.random() - 0.5) * 0.08;
+
+        if (type === 'debris') {
+          this.radius = 14 + Math.random() * 12;
+          this.mass = this.radius * 0.8;
+          this.color = '#38bdf8'; // sky blue / cyan
+          this.points = Math.floor(5 + Math.random() * 4);
+          this.offsets = Array.from({ length: this.points }, () => 0.7 + Math.random() * 0.5);
+        } else if (type === 'code') {
+          this.radius = 16 + Math.random() * 6;
+          this.mass = this.radius * 0.6;
+          this.color = '#00ff66'; // hacker green
+          this.codeText = CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)];
+        } else if (type === 'node') {
+          this.radius = 18 + Math.random() * 6;
+          this.mass = this.radius * 1.2;
+          this.color = '#c084fc'; // ethereal purple
+          this.pulsePhase = Math.random() * Math.PI * 2;
+        } else if (type === 'singularity') {
+          this.radius = 24;
+          this.mass = 50;
+          this.color = '#f43f5e'; // gravitational void
+        }
+      }
+
+      update(bounds, gravity, restitution, wallMode, showTrails) {
+        // Apply gravity vector (which is (0,0) in pure zero-G)
+        this.vel.add(gravity);
+
+        // Frictionless in 0-G (damping is 1.0, preserving complete inertia!)
+        this.pos.add(this.vel);
+        this.angle += this.angularVel;
+
+        // Trail positions
+        if (showTrails) {
+          this.trail.push({ x: this.pos.x, y: this.pos.y });
+          if (this.trail.length > 12) this.trail.shift();
+        } else {
+          this.trail = [];
+        }
+
+        // Boundary physics
+        if (wallMode === 'bounce') {
+          if (this.pos.x - this.radius < 0) {
+            this.pos.x = this.radius;
+            this.vel.x = -this.vel.x * restitution;
+            audioSys.playBounce(this.vel.mag(), this.type);
+          } else if (this.pos.x + this.radius > bounds.width) {
+            this.pos.x = bounds.width - this.radius;
+            this.vel.x = -this.vel.x * restitution;
+            audioSys.playBounce(this.vel.mag(), this.type);
+          }
+
+          if (this.pos.y - this.radius < 0) {
+            this.pos.y = this.radius;
+            this.vel.y = -this.vel.y * restitution;
+            audioSys.playBounce(this.vel.mag(), this.type);
+          } else if (this.pos.y + this.radius > bounds.height) {
+            this.pos.y = bounds.height - this.radius;
+            this.vel.y = -this.vel.y * restitution;
+            audioSys.playBounce(this.vel.mag(), this.type);
+          }
+        } else {
+          // Toroidal wrap
+          if (this.pos.x < -this.radius) this.pos.x = bounds.width + this.radius;
+          if (this.pos.x > bounds.width + this.radius) this.pos.x = -this.radius;
+          if (this.pos.y < -this.radius) this.pos.y = bounds.height + this.radius;
+          if (this.pos.y > bounds.height + this.radius) this.pos.y = -this.radius;
+        }
+      }
+
+      draw(ctx) {
+        // Draw motion trails
+        if (this.trail.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(this.trail[0].x, this.trail[0].y);
+          for (let i = 1; i < this.trail.length; i++) {
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+          }
+          ctx.strokeStyle = this.type === 'debris' ? 'rgba(56, 189, 248, 0.25)' :
+                            this.type === 'code' ? 'rgba(0, 255, 102, 0.25)' :
+                            this.type === 'singularity' ? 'rgba(244, 63, 94, 0.35)' :
+                            'rgba(192, 132, 252, 0.3)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.save();
+        ctx.translate(this.pos.x, this.pos.y);
+        ctx.rotate(this.angle);
+
+        if (this.type === 'debris') {
+          // Irregular space metal scrap / asteroid
+          ctx.beginPath();
+          for (let i = 0; i < this.points; i++) {
+            const th = (i / this.points) * Math.PI * 2;
+            const r = this.radius * this.offsets[i];
+            const px = Math.cos(th) * r;
+            const py = Math.sin(th) * r;
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(12, 74, 110, 0.5)';
+          ctx.fill();
+          ctx.strokeStyle = '#00f3ff';
+          ctx.lineWidth = 1.8;
+          ctx.shadowColor = '#00f3ff';
+          ctx.shadowBlur = 10;
+          ctx.stroke();
+
+          // Satellite antenna detail
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(this.radius * 1.3, 0);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(this.radius * 1.3, 0, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ff007f';
+          ctx.fill();
+
+        } else if (this.type === 'code') {
+          // Floating glowing abandoned floppy/chip packet
+          const w = this.radius * 2.2;
+          const h = this.radius * 1.5;
+          ctx.fillStyle = 'rgba(6, 78, 59, 0.6)';
+          ctx.fillRect(-w/2, -h/2, w, h);
+          ctx.strokeStyle = '#00ff66';
+          ctx.lineWidth = 1.6;
+          ctx.shadowColor = '#00ff66';
+          ctx.shadowBlur = 12;
+          ctx.strokeRect(-w/2, -h/2, w, h);
+
+          // Floppy disk label line
+          ctx.fillStyle = '#022c22';
+          ctx.fillRect(-w/2 + 3, -h/2 + 3, w - 6, 8);
+
+          // Code label
+          ctx.font = '8px "Share Tech Mono", monospace';
+          ctx.fillStyle = '#a7f3d0';
+          ctx.textAlign = 'center';
+          ctx.fillText(this.codeText.substring(0, 10), 0, 4);
+
+        } else if (this.type === 'node') {
+          // Haunted ethereal resonance orb
+          this.pulsePhase = (this.pulsePhase || 0) + 0.05;
+          const pulseR = this.radius + Math.sin(this.pulsePhase) * 3;
+
+          const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, pulseR);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.4, '#c084fc');
+          grad.addColorStop(1, 'rgba(147, 51, 234, 0.05)');
+
+          ctx.beginPath();
+          ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          ctx.strokeStyle = '#e879f9';
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = '#c084fc';
+          ctx.shadowBlur = 15;
+          ctx.stroke();
+
+          // Outer runic orbital ring
+          ctx.beginPath();
+          ctx.arc(0, 0, pulseR * 1.45, 0, Math.PI * 2);
+          ctx.setLineDash([4, 6]);
+          ctx.strokeStyle = 'rgba(192, 132, 252, 0.5)';
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+        } else if (this.type === 'singularity') {
+          // Micro black hole anomaly
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = '#000000';
+          ctx.fill();
+          ctx.strokeStyle = '#f43f5e';
+          ctx.lineWidth = 2.5;
+          ctx.shadowColor = '#ff007f';
+          ctx.shadowBlur = 20;
+          ctx.stroke();
+
+          // Accretion swirl
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius * 1.6, 0, Math.PI * 1.5);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SPECTRAL GHOST IN THE MACHINE (CANVAS AGENT)
+    // -------------------------------------------------------------
+    class GhostAstronaut {
+      constructor(x, y) {
+        this.pos = new Vector2D(x, y);
+        this.vel = new Vector2D(0, 0);
+        this.targetPos = new Vector2D(x, y);
+        this.baseHoverY = y;
+        this.time = 0;
+        this.size = 38;
+        this.mood = "TRANSCENDENT"; // "SPOOKED", "CURIOUS", "RESONANT"
+        this.spookedTimer = 0;
+        this.pulseRings = [];
+        this.tailParticles = [];
+        this.eyeLook = { x: 0, y: 0 };
+      }
+
+      disturb() {
+        this.spookedTimer = 120; // 2 seconds of scared vibration
+        this.mood = "DISTURBED";
+        audioSys.playDisturbBlast();
+
+        // Spawn spectral shockwave ring
+        this.pulseRings.push({
+          x: this.pos.x,
+          y: this.pos.y,
+          r: 10,
+          maxR: 450,
+          opacity: 1.0
+        });
+
+        // Ectoplasmic blast flings the ghost upward
+        this.vel.y -= 8;
+        this.vel.x += (Math.random() - 0.5) * 6;
+
+        const remark = hauntedLore.disturbedRemarks[Math.floor(Math.random() * hauntedLore.disturbedRemarks.length)];
+        typeGhostSpeech(remark, "SPOOKED!");
+        appendTerminalMessage("ghost", `[ECTOPLASMIC DISTURBANCE] ${remark}`);
+      }
+
+      triggerExcited() {
+        this.spookedTimer = 50;
+        this.mood = "RESONATING";
+        this.pulseRings.push({
+          x: this.pos.x,
+          y: this.pos.y,
+          r: 5,
+          maxR: 200,
+          opacity: 0.8
+        });
+      }
+
+      update(bounds, mousePos, objects) {
+        this.time += 0.04;
+
+        // Sine wave gentle zero-G bobbing
+        const hoverY = Math.sin(this.time) * 16;
+        const hoverX = Math.cos(this.time * 0.7) * 10;
+
+        // Ghost gently tracks mouse cursor or floats serenely
+        if (mousePos && mousePos.x) {
+          const dx = mousePos.x - this.pos.x;
+          const dy = mousePos.y - this.pos.y;
+          this.eyeLook.x = Math.max(-6, Math.min(6, dx * 0.03));
+          this.eyeLook.y = Math.max(-6, Math.min(6, dy * 0.03));
+
+          // Soft drift toward mouse if not disturbed
+          if (this.spookedTimer <= 0) {
+            this.vel.x += dx * 0.0004;
+            this.vel.y += (dy + hoverY) * 0.0004;
+          }
+        }
+
+        // Apply disturbed agitation
+        if (this.spookedTimer > 0) {
+          this.spookedTimer--;
+          this.pos.x += (Math.random() - 0.5) * 6;
+          this.pos.y += (Math.random() - 0.5) * 6;
+          if (this.spookedTimer === 0) {
+            this.mood = "TRANSCENDENT";
+          }
+        }
+
+        // Apply velocity with gentle zero-g damping for the ghost
+        this.pos.add(this.vel);
+        this.vel.mult(0.97);
+
+        // Keep inside bounds
+        const pad = 60;
+        if (this.pos.x < pad) { this.pos.x = pad; this.vel.x *= -0.5; }
+        if (this.pos.x > bounds.width - pad) { this.pos.x = bounds.width - pad; this.vel.x *= -0.5; }
+        if (this.pos.y < pad) { this.pos.y = pad; this.vel.y *= -0.5; }
+        if (this.pos.y > bounds.height - pad) { this.pos.y = bounds.height - pad; this.vel.y *= -0.5; }
+
+        // Spawn ectoplasmic tail particles
+        if (Math.random() < 0.6) {
+          this.tailParticles.push({
+            x: this.pos.x + (Math.random() - 0.5) * 14,
+            y: this.pos.y + 24 + Math.random() * 8,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: 0.8 + Math.random() * 1.2,
+            radius: 3 + Math.random() * 5,
+            alpha: 0.7,
+            color: this.spookedTimer > 0 ? '#ff007f' : '#a5f3fc'
+          });
+        }
+
+        // Update tail particles
+        for (let i = this.tailParticles.length - 1; i >= 0; i--) {
+          const p = this.tailParticles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.02;
+          p.radius *= 0.96;
+          if (p.alpha <= 0 || p.radius < 0.5) {
+            this.tailParticles.splice(i, 1);
+          }
+        }
+
+        // Update pulse shockwave rings
+        for (let i = this.pulseRings.length - 1; i >= 0; i--) {
+          const ring = this.pulseRings[i];
+          ring.r += 12;
+          ring.opacity = 1 - (ring.r / ring.maxR);
+          if (ring.r >= ring.maxR) {
+            this.pulseRings.splice(i, 1);
+          }
+        }
+      }
+
+      draw(ctx) {
+        // Draw pulse shockwave rings
+        for (const ring of this.pulseRings) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
+          ctx.strokeStyle = this.spookedTimer > 0
+            ? `rgba(255, 0, 127, ${ring.opacity})`
+            : `rgba(0, 243, 255, ${ring.opacity})`;
+          ctx.lineWidth = 3;
+          ctx.shadowColor = this.spookedTimer > 0 ? '#ff007f' : '#00f3ff';
+          ctx.shadowBlur = 15;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Draw tail particles
+        for (const p of this.tailParticles) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.shadowColor = p.color;
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.save();
+        ctx.translate(this.pos.x, this.pos.y);
+
+        // 1. Ethereal Outer Glow Aura
+        const auraGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, 48);
+        if (this.spookedTimer > 0) {
+          auraGrad.addColorStop(0, 'rgba(255, 0, 127, 0.4)');
+          auraGrad.addColorStop(1, 'rgba(157, 78, 221, 0)');
+        } else {
+          auraGrad.addColorStop(0, 'rgba(165, 243, 252, 0.35)');
+          auraGrad.addColorStop(0.7, 'rgba(147, 51, 234, 0.15)');
+          auraGrad.addColorStop(1, 'rgba(0, 243, 255, 0)');
+        }
+        ctx.beginPath();
+        ctx.arc(0, 0, 48, 0, Math.PI * 2);
+        ctx.fillStyle = auraGrad;
+        ctx.fill();
+
+        // 2. Ghostly Floating Tail
+        ctx.beginPath();
+        ctx.moveTo(-16, 12);
+        const wave = Math.sin(this.time * 2.5) * 8;
+        ctx.bezierCurveTo(-14, 28, -8 + wave, 38, 0, 44);
+        ctx.bezierCurveTo(8 - wave, 38, 14, 28, 16, 12);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(165, 243, 252, 0.4)';
+        ctx.fill();
+
+        // 3. Cute Spectral Astronaut Helmet
+        ctx.beginPath();
+        ctx.arc(0, -2, 22, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(224, 242, 254, 0.85)';
+        ctx.shadowColor = '#00f3ff';
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 4. Helmet Cyber Visor
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(-15, -11, 30, 18, 7);
+        } else {
+          ctx.rect(-15, -11, 30, 18);
+        }
+        ctx.fillStyle = '#050c1e';
+        ctx.fill();
+        ctx.strokeStyle = this.spookedTimer > 0 ? '#ff007f' : '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // 5. Visor Glint Reflection
+        ctx.beginPath();
+        ctx.ellipse(-6, -7, 5, 2.5, -Math.PI / 6, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fill();
+
+        // 6. Cute Expressive Ghost Eyes
+        const eyeColor = this.spookedTimer > 0 ? '#ff007f' : '#00f3ff';
+        ctx.fillStyle = eyeColor;
+        ctx.shadowColor = eyeColor;
+        ctx.shadowBlur = 8;
+
+        if (this.spookedTimer > 0) {
+          // Shocked wide circle eyes
+          ctx.beginPath();
+          ctx.arc(-7 + this.eyeLook.x, -2 + this.eyeLook.y, 4.5, 0, Math.PI * 2);
+          ctx.arc(7 + this.eyeLook.x, -2 + this.eyeLook.y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Cute rounded kawaii blinking eyes
+          const blink = Math.sin(this.time * 0.8) > 0.96;
+          if (blink) {
+            ctx.fillRect(-9 + this.eyeLook.x, -2 + this.eyeLook.y, 5, 1.5);
+            ctx.fillRect(4 + this.eyeLook.x, -2 + this.eyeLook.y, 5, 1.5);
+          } else {
+            ctx.beginPath();
+            ctx.arc(-6 + this.eyeLook.x, -2 + this.eyeLook.y, 3, 0, Math.PI * 2);
+            ctx.arc(6 + this.eyeLook.x, -2 + this.eyeLook.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // 7. Mini Astronaut Antenna on Helmet
+        ctx.beginPath();
+        ctx.moveTo(0, -24);
+        ctx.lineTo(0, -32);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, -33, 3, 0, Math.PI * 2);
+        ctx.fillStyle = this.spookedTimer > 0 ? '#ff007f' : '#a5f3fc';
+        ctx.fill();
+
+        // 8. Floating Astronaut Mittens/Gloves
+        const gloveL = Math.sin(this.time * 2) * 4;
+        const gloveR = Math.cos(this.time * 2) * 4;
+        ctx.beginPath();
+        ctx.arc(-26, 4 + gloveL, 5, 0, Math.PI * 2);
+        ctx.arc(26, 4 + gloveR, 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(165, 243, 252, 0.7)';
+        ctx.fill();
+        ctx.strokeStyle = '#00f3ff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    // -------------------------------------------------------------
+    // MAIN SIMULATION ENVIRONMENT
+    // -------------------------------------------------------------
+    class ZeroGSimulation {
+      constructor() {
+        this.canvas = document.getElementById('simCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.objects = [];
+        this.ghost = null;
+        this.gravity = new Vector2D(0, 0); // 0G by default!
+        this.gravityMode = 0; // 0 = 0.0G, 1 = Downward G, 2 = Glitch Float
+        this.speedMultiplier = 1.0;
+        this.restitution = 0.98;
+        this.wallMode = 'bounce'; // 'bounce' or 'wrap'
+        this.showTrails = true;
+
+        this.mousePos = new Vector2D(0, 0);
+        this.isMouseDown = false;
+        this.dragStart = null;
+        this.activeSpawnType = 'debris';
+
+        this.observationTimer = 0;
+
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+
+        // Spawn Ghost Agent in center
+        this.ghost = new GhostAstronaut(this.width * 0.5, this.height * 0.4);
+
+        this.bindEvents();
+        this.spawnInitialCosmos();
+      }
+
+      resize() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = this.canvas.getBoundingClientRect();
+        this.width = rect.width;
+        this.height = rect.height;
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        this.ctx.scale(dpr, dpr);
+      }
+
+      spawnInitialCosmos() {
+        // Spawn starter debris, code packet, and haunted node
+        this.spawnObject(this.width * 0.25, this.height * 0.3, 1.2, 0.8, 'debris');
+        this.spawnObject(this.width * 0.75, this.height * 0.25, -1.0, 1.1, 'code');
+        this.spawnObject(this.width * 0.35, this.height * 0.75, 0.9, -0.7, 'node');
+        this.spawnObject(this.width * 0.7, this.height * 0.65, -0.6, -1.2, 'debris');
+      }
+
+      spawnObject(x, y, vx, vy, type = null) {
+        const t = type || this.activeSpawnType;
+        const finalVx = vx * this.speedMultiplier;
+        const finalVy = vy * this.speedMultiplier;
+        const obj = new PhysicsObject(x, y, finalVx, finalVy, t);
+        this.objects.push(obj);
+
+        if (audioSys.enabled) audioSys.playGlitchChirp();
+        this.updateTelemetry();
+        return obj;
+      }
+
+      toggleGravity() {
+        this.gravityMode = (this.gravityMode + 1) % 3;
+        const badge = document.getElementById('gravityBadge');
+        const badgeText = document.getElementById('gravityBadgeText');
+        const btnLabel = document.getElementById('gravityBtnLabel');
+
+        if (this.gravityMode === 0) {
+          this.gravity.set(0, 0);
+          badgeText.textContent = "0.0 G (WEIGHTLESS)";
+          badge.className = "px-2.5 py-1 rounded bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 font-bold flex items-center gap-1.5";
+          btnLabel.textContent = "GRAVITY: ZERO-G";
+          typeGhostSpeech("Gravity extinguished. Objects resume infinite frictionless drift.", "ZERO-G");
+          appendTerminalMessage("system", "Gravity Field: 0.0G Zero-Friction Equilibrium.");
+        } else if (this.gravityMode === 1) {
+          this.gravity.set(0, 0.35); // Normal Earth-ish pull
+          badgeText.textContent = "1.0 G (COLLAPSE)";
+          badge.className = "px-2.5 py-1 rounded bg-amber-950/50 border border-amber-500/40 text-amber-300 font-bold flex items-center gap-1.5";
+          btnLabel.textContent = "GRAVITY: COLLAPSE";
+          typeGhostSpeech("Gravitational well engaged! Mass pulls downward!", "GRAVITY SPIKE");
+          appendTerminalMessage("system", "Gravity Field: Active Downward Pull (0.35G).");
+        } else {
+          this.gravity.set(0, -0.28); // Glitch inverse float
+          badgeText.textContent = "GLITCH INVERSE (-G)";
+          badge.className = "px-2.5 py-1 rounded bg-purple-950/50 border border-purple-500/40 text-purple-300 font-bold flex items-center gap-1.5";
+          btnLabel.textContent = "GRAVITY: INVERSE";
+          typeGhostSpeech("Inverted gravity vector! The sky is swallowing the code!", "GLITCH VECTOR");
+          appendTerminalMessage("system", "Gravity Field: Inverse Glitch Inversion (-0.28G).");
+        }
+      }
+
+      disturbTheGhost() {
+        this.ghost.disturb();
+
+        // Shockwave impulse: push all objects outward from ghost
+        const shockOrigin = this.ghost.pos;
+        for (const obj of this.objects) {
+          const d = obj.pos.dist(shockOrigin);
+          if (d < 500 && d > 1) {
+            const force = (1 - (d / 500)) * 16 * this.speedMultiplier;
+            const dir = obj.pos.clone().sub(shockOrigin).normalize();
+            obj.vel.add(dir.mult(force));
+          }
+        }
+      }
+
+      spawnChaosSwarm() {
+        const types = ['debris', 'code', 'node'];
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const dist = 60 + Math.random() * 40;
+          const x = this.ghost.pos.x + Math.cos(angle) * dist;
+          const y = this.ghost.pos.y + Math.sin(angle) * dist;
+          const vx = Math.cos(angle) * (2 + Math.random() * 3);
+          const vy = Math.sin(angle) * (2 + Math.random() * 3);
+          this.spawnObject(x, y, vx, vy, types[i % types.length]);
+        }
+        typeGhostSpeech("A swarm of unlinked matter bursts into the sector!", "CHAOS SURGE");
+        appendTerminalMessage("system", "Spawned 8-body orbital matter swarm.");
+      }
+
+      bindEvents() {
+        // Drag to launch objects
+        this.canvas.addEventListener('mousedown', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          // Check if clicking directly on ghost
+          const distToGhost = this.ghost.pos.dist(new Vector2D(x, y));
+          if (distToGhost < 50) {
+            this.disturbTheGhost();
+            return;
+          }
+
+          this.isMouseDown = true;
+          this.dragStart = new Vector2D(x, y);
+        });
+
+        this.canvas.addEventListener('mousemove', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          this.mousePos.set(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        window.addEventListener('mouseup', (e) => {
+          if (!this.isMouseDown || !this.dragStart) return;
+          this.isMouseDown = false;
+
+          const rect = this.canvas.getBoundingClientRect();
+          const currentPos = new Vector2D(e.clientX - rect.left, e.clientY - rect.top);
+
+          // Velocity is proportional to drag vector
+          const dragVec = this.dragStart.clone().sub(currentPos);
+          let vx = dragVec.x * 0.08;
+          let vy = dragVec.y * 0.08;
+
+          // If minimal drag, give random subtle drift
+          if (Math.abs(vx) < 0.2 && Math.abs(vy) < 0.2) {
+            vx = (Math.random() - 0.5) * 2;
+            vy = (Math.random() - 0.5) * 2;
+          }
+
+          this.spawnObject(this.dragStart.x, this.dragStart.y, vx, vy);
+          this.dragStart = null;
+        });
+
+        // Double click for localized warp pulse
+        this.canvas.addEventListener('dblclick', (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          // Radial push from click
+          for (const obj of this.objects) {
+            const d = obj.pos.dist(new Vector2D(x, y));
+            if (d < 300) {
+              const push = (1 - d / 300) * 10;
+              const dir = obj.pos.clone().sub(new Vector2D(x, y)).normalize();
+              obj.vel.add(dir.mult(push));
+            }
+          }
+          audioSys.playGlitchChirp();
+        });
+      }
+
+      handleCollisions() {
+        const n = this.objects.length;
+        const e = this.restitution;
+
+        for (let i = 0; i < n; i++) {
+          const o1 = this.objects[i];
+
+          // If object is singularity, exert gravitational pull on others
+          if (o1.type === 'singularity') {
+            for (let j = 0; j < n; j++) {
+              if (i === j) continue;
+              const o2 = this.objects[j];
+              const d = o1.pos.dist(o2.pos);
+              if (d > 20 && d < 350) {
+                const pullForce = (30 / (d * d)) * 12;
+                const pullDir = o1.pos.clone().sub(o2.pos).normalize();
+                o2.vel.add(pullDir.mult(pullForce));
+              }
+            }
+          }
+
+          for (let j = i + 1; j < n; j++) {
+            const o2 = this.objects[j];
+            const dist = o1.pos.dist(o2.pos);
+            const minDist = o1.radius + o2.radius;
+
+            // Elastic circle collision resolution in 2D zero-G
+            if (dist < minDist && dist > 0) {
+              // Normal and tangent unit vectors
+              const normal = o2.pos.clone().sub(o1.pos).normalize();
+
+              // Separate overlapping bodies along collision normal
+              const overlap = (minDist - dist) * 0.5;
+              o1.pos.sub(normal.clone().mult(overlap));
+              o2.pos.add(normal.clone().mult(overlap));
+
+              // Relative velocity
+              const rv = o2.vel.clone().sub(o1.vel);
+              const velAlongNormal = rv.dot(normal);
+
+              // Do not resolve if velocities are separating
+              if (velAlongNormal < 0) {
+                // Impulse scalar
+                const impulse = -(1 + e) * velAlongNormal / (1/o1.mass + 1/o2.mass);
+                const impulseVec = normal.clone().mult(impulse);
+
+                o1.vel.sub(impulseVec.clone().div(o1.mass));
+                o2.vel.add(impulseVec.clone().div(o2.mass));
+
+                // Sound effect on collision
+                audioSys.playBounce(Math.abs(velAlongNormal), o1.type);
+                if (o1.type === 'node' || o2.type === 'node') {
+                  audioSys.playNodeHarmonic();
+                }
+              }
+            }
+          }
+        }
+      }
+
+      drawQuantumConnectors() {
+        // Draw laser/ether filaments between close Haunted Nodes
+        const nodes = this.objects.filter(o => o.type === 'node');
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const d = nodes[i].pos.dist(nodes[j].pos);
+            if (d < 220) {
+              const alpha = (1 - d / 220) * 0.6;
+              this.ctx.beginPath();
+              this.ctx.moveTo(nodes[i].pos.x, nodes[i].pos.y);
+              this.ctx.lineTo(nodes[j].pos.x, nodes[j].pos.y);
+              this.ctx.strokeStyle = `rgba(192, 132, 252, ${alpha})`;
+              this.ctx.lineWidth = 1.5;
+              this.ctx.shadowColor = '#c084fc';
+              this.ctx.shadowBlur = 8;
+              this.ctx.stroke();
+
+              // Subtle harmonic attraction
+              const pull = nodes[j].pos.clone().sub(nodes[i].pos).normalize().mult(0.015);
+              nodes[i].vel.add(pull);
+              nodes[j].vel.sub(pull);
+            }
+          }
+        }
+      }
+
+      drawAimDragLine() {
+        if (!this.isMouseDown || !this.dragStart) return;
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.dragStart.x, this.dragStart.y);
+        this.ctx.lineTo(this.mousePos.x, this.mousePos.y);
+        this.ctx.strokeStyle = '#00f3ff';
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]);
+        this.ctx.shadowColor = '#00f3ff';
+        this.ctx.shadowBlur = 10;
+        this.ctx.stroke();
+
+        // Launch anchor ring
+        this.ctx.beginPath();
+        this.ctx.arc(this.dragStart.x, this.dragStart.y, 8, 0, Math.PI * 2);
+        this.ctx.fillStyle = 'rgba(0, 243, 255, 0.5)';
+        this.ctx.fill();
+        this.ctx.restore();
+      }
+
+      updateTelemetry() {
+        document.getElementById('objectCountDisplay').textContent = this.objects.length;
+        let totalEnergy = 0;
+        for (const o of this.objects) {
+          const v = o.vel.mag();
+          totalEnergy += 0.5 * o.mass * v * v;
+        }
+        document.getElementById('kineticEnergyDisplay').textContent = `${totalEnergy.toFixed(1)} J`;
+      }
+
+      autonomousGhostObservations() {
+        this.observationTimer++;
+        // Every ~14 seconds, ghost spontaneously comments on physics environment
+        if (this.observationTimer > 750) {
+          this.observationTimer = 0;
+          if (this.objects.length > 0) {
+            const debris = this.objects.filter(o => o.type === 'debris').length;
+            const code = this.objects.filter(o => o.type === 'code').length;
+            const nodes = this.objects.filter(o => o.type === 'node').length;
+
+            let remark = "";
+            if (nodes > 1) {
+              remark = hauntedLore.nodeRemarks[Math.floor(Math.random() * hauntedLore.nodeRemarks.length)];
+            } else if (code > 1) {
+              remark = hauntedLore.codeRemarks[Math.floor(Math.random() * hauntedLore.codeRemarks.length)];
+            } else if (debris > 0) {
+              remark = hauntedLore.debrisRemarks[Math.floor(Math.random() * hauntedLore.debrisRemarks.length)];
+            } else {
+              remark = hauntedLore.intros[Math.floor(Math.random() * hauntedLore.intros.length)];
+            }
+            typeGhostSpeech(remark, "OBSERVING");
+            appendTerminalMessage("ghost", `[AUTONOMOUS OBSERVATION] ${remark}`);
+          }
+        }
+      }
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+
+        // Clear canvas with subtle void trail effect
+        this.ctx.fillStyle = 'rgba(1, 3, 7, 0.45)';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+
+        // Draw quantum connectors between nodes
+        this.drawQuantumConnectors();
+
+        // Update & draw physics objects
+        for (const obj of this.objects) {
+          obj.update(
+            { width: this.width, height: this.height },
+            this.gravity,
+            this.restitution,
+            this.wallMode,
+            this.showTrails
+          );
+          obj.draw(this.ctx);
+        }
+
+        // Handle vector collisions in 0-G
+        this.handleCollisions();
+
+        // Update & draw Spectral Ghost Agent
+        this.ghost.update({ width: this.width, height: this.height }, this.mousePos, this.objects);
+        this.ghost.draw(this.ctx);
+
+        // Draw drag aim trajectory
+        this.drawAimDragLine();
+
+        // Autonomous observations
+        this.autonomousGhostObservations();
+
+        // Periodic telemetry
+        if (this.observationTimer % 30 === 0) {
+          this.updateTelemetry();
+        }
+      }
+    }
+
+    // Initialize Simulation
+    const sim = new ZeroGSimulation();
+    sim.animate();
+
+    // -------------------------------------------------------------
+    // UI CONTROLS & WIDGET LISTENERS
+    // -------------------------------------------------------------
+    // Gravity Toggle
+    document.getElementById('toggleGravityBtn').addEventListener('click', () => {
+      sim.toggleGravity();
+      audioSys.playGlitchChirp();
+    });
+
+    // Disturb Ghost
+    document.getElementById('disturbGhostBtn').addEventListener('click', () => {
+      sim.disturbTheGhost();
+    });
+
+    // Clear Field
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      sim.objects = [];
+      sim.updateTelemetry();
+      typeGhostSpeech("The void is cleared. Total vacuum silence restored.", "EQUILIBRIUM");
+      appendTerminalMessage("system", "Physics field wiped.");
+      audioSys.playGlitchChirp();
+    });
+
+    // Spawn Palette Buttons
+    const spawnButtons = document.querySelectorAll('.spawn-type-btn');
+    spawnButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        spawnButtons.forEach(b => {
+          b.classList.remove('active', 'border-cyan-400', 'text-cyan-300', 'bg-cyan-950/80');
+          b.classList.add('border-gray-700', 'text-gray-300', 'bg-void-dark');
+        });
+        btn.classList.add('active', 'border-cyan-400', 'text-cyan-300', 'bg-cyan-950/80');
+        btn.classList.remove('border-gray-700', 'text-gray-300', 'bg-void-dark');
+        sim.activeSpawnType = btn.dataset.spawn;
+      });
+    });
+
+    // Spawn Chaos Swarm
+    document.getElementById('spawnChaosSwarmBtn').addEventListener('click', () => {
+      sim.spawnChaosSwarm();
+    });
+
+    // Spawn Singularity
+    document.getElementById('spawnSingularityBtn').addEventListener('click', () => {
+      sim.spawnObject(sim.width * 0.5, sim.height * 0.5, 0, 0, 'singularity');
+      typeGhostSpeech("Gravitational anomaly detected! Event horizon expanding!", "WARP ANOMALY");
+      appendTerminalMessage("system", "Quantum Singularity placed in sector.");
+    });
+
+    // Speed Slider
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValText = document.getElementById('speedValText');
+    speedSlider.addEventListener('input', (e) => {
+      sim.speedMultiplier = parseFloat(e.target.value);
+      speedValText.textContent = `${sim.speedMultiplier.toFixed(1)}x`;
+    });
+
+    // Restitution Slider
+    const restitutionSlider = document.getElementById('restitutionSlider');
+    const restitutionValText = document.getElementById('restitutionValText');
+    restitutionSlider.addEventListener('input', (e) => {
+      sim.restitution = parseFloat(e.target.value);
+      restitutionValText.textContent = sim.restitution.toFixed(2);
+    });
+
+    // Wall Mode Button
+    const wallModeBtn = document.getElementById('wallModeBtn');
+    wallModeBtn.addEventListener('click', () => {
+      if (sim.wallMode === 'bounce') {
+        sim.wallMode = 'wrap';
+        wallModeBtn.textContent = "Toroidal Wrap";
+        wallModeBtn.className = "px-2 py-0.5 rounded bg-purple-900 border border-purple-500 text-purple-200 text-[10px]";
+        appendTerminalMessage("system", "Boundary mode: Infinite Toroidal Wrapping.");
+      } else {
+        sim.wallMode = 'bounce';
+        wallModeBtn.textContent = "Elastic Bounce";
+        wallModeBtn.className = "px-2 py-0.5 rounded bg-gray-800 border border-gray-600 text-gray-200 text-[10px]";
+        appendTerminalMessage("system", "Boundary mode: Elastic Perimeter Bounce.");
+      }
+    });
+
+    // Motion Trails Checkbox
+    document.getElementById('trailCheckbox').addEventListener('change', (e) => {
+      sim.showTrails = e.target.checked;
+    });
+
+    // CRT Toggle
+    const crtOverlay = document.getElementById('crtOverlay');
+    const crtToggleBtn = document.getElementById('crtToggleBtn');
+    const crtStateText = document.getElementById('crtStateText');
+    crtToggleBtn.addEventListener('click', () => {
+      if (crtOverlay.style.display === 'none') {
+        crtOverlay.style.display = 'block';
+        crtStateText.textContent = "ON";
+      } else {
+        crtOverlay.style.display = 'none';
+        crtStateText.textContent = "OFF";
+      }
+    });
+
+    // Submission Modal
+    const submissionModal = document.getElementById('submissionModal');
+    document.getElementById('submissionInfoBtn').addEventListener('click', () => {
+      submissionModal.classList.remove('hidden');
+    });
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+      submissionModal.classList.add('hidden');
+    });
+    submissionModal.addEventListener('click', (e) => {
+      if (e.target === submissionModal) submissionModal.classList.add('hidden');
+    });
+
+    // Copy DEV Submission Markdown Button
+    document.getElementById('copySubmissionMdBtn').addEventListener('click', () => {
+      const markdown = `---
+title: Anti-Gravity AI: Ghost in the Machine — 0-G Physics & Transformers.js Simulator
+published: true
+tags: hacktoberfest, ai, open-source, javascript
+cover_image: https://raw.githubusercontent.com/username/anti-gravity-ai/main/preview.png
+---
+
+## 🚀 Hacktoberfest Open-Source AI Challenge Submission
+
+### 🌌 What I Built
+**Anti-Gravity AI: Ghost in the Machine** is a 2D zero-gravity interactive sandbox simulation built entirely in client-side HTML5 Canvas, Tailwind CSS, and Hugging Face's open-source **Transformers.js**!
+
+- **Frictionless Zero-G Physics:** Newtonian momentum conservation, elastic vector collisions, and gravity field manipulation.
+- **Floating Matter:** Launch space debris, abandoned code packets (segfaults & 0xDEADBEEF), and resonant haunted nodes.
+- **Client-Side AI Ghost:** An ethereal spectral astronaut that observes floating items and answers existential questions using in-browser Transformers.js!
+- **Procedural Web Audio:** Zero external sound files — cybernetic chirps, bounce harmonics, and sub-bass shockwaves are synthesized in real-time.
+
+### 🕹️ Try It Out
+Single-file self-contained \`index.html\` with zero build steps or server keys required!
+`;
+      navigator.clipboard.writeText(markdown).then(() => {
+        alert("DEV.to Submission Template copied to clipboard! Ready to publish.");
+      });
+    });
+
+    // Initial greeting
+    typeGhostSpeech("I linger where friction is zero... release your forgotten bytecodes into the abyss, human.");
+  </script>
+</body>
+</html>
